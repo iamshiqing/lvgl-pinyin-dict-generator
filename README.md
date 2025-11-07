@@ -65,12 +65,11 @@
 #include "my_pinyin_dict.c"
 lv_100ask_pinyin_ime_set_dict(ime, my_pinyin_dict);
 ```
+---
 
 ## 🌟 Acknowledgements / 致谢
 
 感谢所有为本项目提供灵感与支持的开源项目与社区。
-
----
 
 ### 💡 Open Source Projects | 开源项目
 
@@ -80,7 +79,6 @@ lv_100ask_pinyin_ime_set_dict(ime, my_pinyin_dict);
 - [**pinyin-pro**](https://github.com/zh-lx/pinyin-pro)  
   一个优秀的 JavaScript 拼音解析库，提供了高准确度的汉字转拼音功能。
 
----
 
 ### ❤️ Community | 社区
 
