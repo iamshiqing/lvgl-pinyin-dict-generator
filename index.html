@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LVGL 拼音字典生成器</title>
+<script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.js"></script>
+<style>
+:root {
+    --bg: #f7f8fa;
+    --card: #fff;
+    --primary: #0066ff;
+    --border: #ddd;
+}
+body {
+    font-family: "Segoe UI", "Microsoft Yahei", sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 0;
+}
+header {
+    background: var(--primary);
+    color: #fff;
+    text-align: center;
+    padding: 16px 0;
+    font-size: 1.4em;
+    letter-spacing: 1px;
+}
+main {
+    max-width: 960px;
+    margin: 30px auto;
+    background: var(--card);
+    padding: 24px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.section {
+    margin-bottom: 20px;
+}
+label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+input[type=text], textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+textarea { resize: vertical; height: 80px; }
+button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 18px;
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 14px;
+}
+button:hover { opacity: 0.9; }
+#output {
+    background: #f5f5f5;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    white-space: pre-wrap;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: Consolas, monospace;
+}
+footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #888;
+    font-size: 0.9em;
+}
+</style>
+</head>
+      
+<body>
+<a href="https://github.com/iamshiqing/lvgl-pinyin-dict-generator" class="github-corner" aria-label="View source on GitHub"><svg width="60" height="60" viewBox="0 0 250 250" style="fill:#000000; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+<style>
+    .github-corner:hover .octo-arm{
+    animation:octocat-wave 560ms ease-in-out;
+    }
+    @keyframes octocat-wave{
+    0%,100%{
+        transform:rotate(0);
+    }
+    20%,60%{
+        transform:rotate(-25deg);
+    }
+    40%,80%{
+        transform:rotate(10deg);
+    }
+    }
+    @media (max-width:500px){
+    .github-corner:hover .octo-arm{
+        animation:none;
+    }
+    .github-corner .octo-arm{
+        animation:octocat-wave 560ms ease-in-out;
+    }
+    }
+</style>
+    
+  
+<header>LVGL 拼音字典生成器</header>
+
+
+<main>
+    <div class="section">
+        <label>📘 字典名称</label>
+        <input type="text" id="dictName" placeholder="your_pinyin_dict" value="your_pinyin_dict">
+    </div>
+
+    <div class="section">
+        <label>🔢 范围参数（Ranges）</label>
+        <small>Ranges and/or characters to include. e.g. <code>0x4E00-0x9FA5,0x3400-0x4DBF</code></small>
+        <input type="text" id="ranges" value="0x4E00-0x9FA5">
+    </div>
+
+    <div class="section">
+        <label>🔣 符号参数（Symbols）</label>
+        <small>List of characters to include. e.g. <code>你好世界测试</code></small>
+        <textarea id="symbols" placeholder="输入额外需要包含的汉字，可留空"></textarea>
+    </div>
+
+    <div class="section">
+        <button onclick="generate()">生成字典</button>
+        <button onclick="copyOutput()">复制到剪贴板</button>
+        <button onclick="downloadFile()">下载 .c 文件</button>
+    </div>
+
+    <div class="section">
+        <label>🧩 输出结果：</label>
+        <pre id="output">（生成结果将在此显示）</pre>
+    </div>
+</main>
+
+<footer>
+    © 2025 LVGL 拼音字典生成器 | Powered by iamshiqing
+</footer>
+
+<script>
+// 常用拼音顺序表（精简，可扩展）
+const pinyin_order = [
+"a","ai","an","ang","ao","ba","bai","ban","bang","bao","bei","ben","beng","bi","bian","biao","bie","bin","bing","bo","bu",
+"ca","cai","can","cang","cao","ce","cen","ceng","cha","chai","chan","chang","chao","che","chen","cheng","chi","chong","chou","chu","chuai","chuan","chuang","chui","chun","chuo",
+"ci","cong","cou","cu","cuan","cui","cun","cuo","da","dai","dan","dang","dao","de","deng","di","dian","diao","die","ding","diu","dong","dou","du","duan","dui","dun","duo",
+"e","en","er","fa","fan","fang","fei","fen","feng","fo","fou","fu","ga","gai","gan","gang","gao","ge","gei","gen","geng","gong","gou","gu","gua","guai","guan","guang","gui","gun","guo",
+"ha","hai","han","hang","hao","he","hei","hen","heng","hong","hou","hu","hua","huai","huan","huang","hui","hun","huo",
+"ji","jia","jian","jiang","jiao","jie","jin","jing","jiong","jiu","ju","juan","jue","jun",
+"ka","kai","kan","kang","kao","ke","ken","keng","kong","kou","ku","kua","kuai","kuan","kuang","kui","kun","kuo",
+"la","lai","lan","lang","lao","le","lei","leng","li","lia","lian","liang","liao","lie","lin","ling","liu","long","lou","lu","lv","luan","lue","lun","luo",
+"ma","mai","man","mang","mao","me","mei","men","meng","mi","mian","miao","mie","min","ming","mo","mou","mu",
+"na","nai","nan","nang","nao","ne","nei","nen","neng","ni","nian","niang","niao","nie","nin","ning","niu","nong","nu","nv","nuan","nue","nuo",
+"o","ou","pa","pai","pan","pang","pao","pei","pen","peng","pi","pian","piao","pie","pin","ping","po","pou","pu",
+"qi","qia","qian","qiang","qiao","qie","qin","qing","qiong","qiu","qu","quan","que","qun",
+"ran","rang","rao","re","ren","reng","ri","rong","rou","ru","ruan","rui","run","ruo",
+"sa","sai","san","sang","sao","se","sen","sha","shai","shan","shang","shao","she","shen","sheng","shi","shou","shu","shua","shuai","shuan","shuang","shui","shun","shuo",
+"si","song","sou","su","suan","sui","sun","suo",
+"ta","tai","tan","tang","tao","te","teng","ti","tian","tiao","tie","ting","tong","tou","tu","tuan","tui","tun","tuo",
+"wa","wai","wan","wang","wei","wen","weng","wo","wu",
+"xi","xia","xian","xiang","xiao","xie","xin","xing","xiong","xiu","xu","xuan","xue","xun",
+"ya","yan","yang","yao","ye","yi","yin","ying","yo","yong","you","yu","yuan","yue","yun",
+"za","zai","zan","zang","zao","ze","zei","zen","zeng","zha","zhai","zhan","zhang","zhao","zhe","zhen","zheng","zhi","zhong","zhou","zhu","zhua","zhuai","zhuan","zhuang","zhui","zhun","zhuo",
+"zi","zong","zou","zu","zuan","zui","zun","zuo"
+];
+
+function parseRanges(rangeStr) {
+    let chars = [];
+    const parts = rangeStr.split(",");
+    for (let p of parts) {
+        p = p.trim();
+        if (!p) continue;
+        if (p.includes("-")) {
+            let [start, end] = p.split("-");
+            let s = parseInt(start, 16);
+            let e = parseInt(end, 16);
+            for (let i = s; i <= e; i++) {
+                chars.push(String.fromCharCode(i));
+            }
+        } else if (p.startsWith("0x")) {
+            chars.push(String.fromCharCode(parseInt(p, 16)));
+        }
+    }
+    return chars.join("");
+}
+
+function generate() {
+    const dictName = document.getElementById("dictName").value || "your_pinyin_dict";
+    const ranges = document.getElementById("ranges").value;
+    const symbols = document.getElementById("symbols").value;
+
+    // 合并字符集
+    let chars = parseRanges(ranges) + symbols;
+    // 过滤中文范围 (CJK Unified Ideographs)
+    chars = [...new Set([...chars].filter(ch => /[\u4E00-\u9FFF]/.test(ch)))].join("");
+
+    let dict = {};
+    for (let py of pinyin_order) dict[py] = "";
+
+    for (let ch of chars) {
+        // 仅处理中文字符
+        if (/[\u4E00-\u9FFF]/.test(ch)) {
+            // 使用 pinyin-pro 转换为无声调拼音
+            const py = window.pinyinPro.pinyin(ch, { toneType: 'none' }).toLowerCase();
+            if (dict[py] !== undefined) dict[py] += ch;
+        }
+    }
+
+
+    let out = `lv_100ask_pinyin_dict_t ${dictName}[] = {\n`;
+    for (let py of pinyin_order) {
+        if (dict[py] && dict[py].length > 0) {
+            out += `    { "${py}", "${dict[py]}" },\n`;
+        }
+    }
+    out += "    { NULL, NULL }\n};";
+
+    document.getElementById("output").textContent = out;
+}
+
+function copyOutput() {
+    navigator.clipboard.writeText(document.getElementById("output").textContent);
+    alert("已复制到剪贴板！");
+}
+
+function downloadFile() {
+    const name = document.getElementById("dictName").value || "your_pinyin_dict";
+    const blob = new Blob([document.getElementById("output").textContent], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${name}.c`;
+    a.click();
+}
+</script>
+
+</body>
+</html>
