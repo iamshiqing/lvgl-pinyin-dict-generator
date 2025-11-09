@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LVGL 拼音字典生成器</title>
 <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.18.2/dist/index.js"></script>
+<script src="freq_order.js"></script>
 <style>
 :root {
     --bg: #f7f8fa;
@@ -172,6 +173,24 @@ const pinyin_order = [
 "zi","zong","zou","zu","zuan","zui","zun","zuo"
 ];
 
+let freqMap = {};
+
+function initFreqMap() {
+    if (!window.HZ_FREQ_ORDER) {
+        console.warn("⚠️ 未加载字频表");
+        return;
+    }
+
+    freqMap = {};
+    window.HZ_FREQ_ORDER.forEach(item => {
+        freqMap[item.char] = item.order;
+    });
+
+    console.log(`✅ 已加载 ${Object.keys(freqMap).length} 个字的顺序`);
+}
+
+document.addEventListener("DOMContentLoaded", initFreqMap);
+
 function parseRanges(rangeStr) {
     let chars = [];
     const parts = rangeStr.split(",");
@@ -218,6 +237,12 @@ function generate() {
     let out = `lv_100ask_pinyin_dict_t ${dictName}[] = {\n`;
     for (let py of pinyin_order) {
         if (dict[py] && dict[py].length > 0) {
+            let arr = [...dict[py]];
+
+            // 按 order 升序排序（小 → 大，高频字在前）
+            arr.sort((a, b) => (freqMap[a] ?? 99999) - (freqMap[b] ?? 99999));
+
+            dict[py] = arr.join('');
             out += `    { "${py}", "${dict[py]}" },\n`;
         }
     }
